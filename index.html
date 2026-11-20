@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blackjack stratégie de base</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE occasion : un jeu de casino, feutré et précis, au service de l'entraînement
+   IDEA une vraie table de blackjack : feutre vert, rebord en bois, sabot, jetons, sérigraphie dorée
+   PICTURE la table elle-même, croupier en haut, mains du joueur en bas, verdict de stratégie sur chaque main
+   COLOUR feutre #157043, bois #5a3215, or #f3d98b, ok #22a35a, erreur #d2412f, salle #07130d
+   TYPE Cinzel (sérigraphie de table) + Inter (interface)
+   LAYOUT portable : table 1fr + panneau stats 330px ; téléphone : table, commandes, puis stats */
+:root{color-scheme:dark;--cw:84px;--ch:calc(var(--cw)*1.4);--gold:#f3d98b;--ok:#22a35a;--ko:#d2412f;--ink:#eef3ee;--mut:#a9c2b2}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:#07130d;color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible+span{outline:3px solid #fff;outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;padding:14px max(16px,3vw);max-width:1400px;margin:0 auto}
+h1{font:700 clamp(22px,3vw,30px)/1.05 Cinzel,Georgia,serif;margin:0;color:var(--gold)}
+.bank{display:flex;gap:22px;flex-wrap:wrap}
+.bank div{display:flex;flex-direction:column;line-height:1.2}
+.bank span{font-size:13px;color:var(--mut)}
+.bank b{font:700 20px Inter;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;padding:0 max(16px,3vw) 28px;max-width:1400px;margin:0 auto;align-items:start}
+.rail{background:linear-gradient(#70411d,#3a1e0b);border-radius:30px;padding:12px;box-shadow:0 18px 40px #000b,inset 0 2px 0 #a06a3a}
+.felt{position:relative;border-radius:22px 22px 12px 12px;background:radial-gradient(120% 90% at 50% 18%,#25995d 0%,#157043 45%,#0a4428 100%);min-height:clamp(440px,62vh,600px);display:grid;grid-template-rows:auto 1fr auto;gap:8px;padding:18px 14px 18px;overflow:hidden;box-shadow:inset 0 0 90px #000a}
+.felt::before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 30% 30%,#ffffff05 0 1px,transparent 1px 3px);pointer-events:none}
+.zone{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:1}
+.lbl{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#d7ecdd}
+.pill{background:#000a;border:1px solid #f3d98b66;border-radius:99px;padding:1px 10px;font:700 14px Inter;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
+.pill:empty{display:none}
+.cards{display:flex;justify-content:center;min-height:var(--ch)}
+.card{position:relative;width:var(--cw);height:var(--ch);perspective:900px;margin-left:calc(var(--cw)*-.5);flex:none}
+.card:first-child{margin-left:0}
+.card.deal{animation:deal .42s cubic-bezier(.2,.8,.3,1) both}
+@keyframes deal{from{transform:translate(36vw,-34vh) rotate(28deg);opacity:0}50%{opacity:1}to{transform:none}}
+.in{position:absolute;inset:0;transition:transform .5s;transform-style:preserve-3d}
+.card.down .in{transform:rotateY(180deg)}
+.face,.back{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;box-shadow:0 3px 8px #0007}
+.face{background:linear-gradient(160deg,#fff,#f1efe8);color:#15171a;border:1px solid #ccc}
+.face.red{color:#c4161c}
+.face b{position:absolute;display:flex;flex-direction:column;align-items:center;font:700 calc(var(--cw)*.21)/1 Georgia,serif}
+.face b i{font-style:normal;font-size:.9em}
+.face .tl{top:5px;left:6px}
+.face .br{bottom:5px;right:6px;transform:rotate(180deg)}
+.mid{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--cw)*.5)}
+.mid.fc{font:700 calc(var(--cw)*.4) Cinzel,Georgia,serif;inset:22% 20%;border:1.5px solid currentColor;border-radius:4px;opacity:.85}
+.back{transform:rotateY(180deg);background:repeating-linear-gradient(45deg,#8e1b23 0 5px,#a8262f 5px 10px);border:4px solid #fff}
+.back::after{content:"";position:absolute;inset:5px;border:1.5px solid #ffffff88;border-radius:3px}
+.middle{position:relative;display:grid;place-items:center;align-content:center;gap:8px;text-align:center;z-index:1}
+.imprint{position:absolute;left:50%;top:50%;width:min(560px,96%);transform:translate(-50%,-62%);opacity:.32;pointer-events:none}
+.imprint text{font:700 23px Cinzel,serif;fill:var(--gold)}
+.imprint .sub{font:600 15px Cinzel,serif}
+#msg{font:600 clamp(16px,2vw,19px)/1.3 Inter;color:#fff;text-shadow:0 1px 3px #000;min-height:1.3em}
+#tip{max-width:600px;font-size:14px;line-height:1.4;padding:8px 14px;border-radius:10px;background:#0008;border:1px solid #ffffff22}
+#tip:empty{display:none}
+#tip.ok{background:#0f3d23e6;border-color:#22a35a}
+#tip.ko{background:#4a1410e6;border-color:#d2412f}
+#hands{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px}
+.hand{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 10px 10px;border-radius:14px;border:2px solid transparent;transition:border-color .2s,background .2s}
+.hand.active{border-color:var(--gold);background:#00000026;box-shadow:0 0 26px #f3d98b44}
+.fb{font:600 13px/1.25 Inter;padding:3px 10px;border-radius:99px;color:#fff;max-width:250px;text-align:center}
+.fb.ok{background:var(--ok)}
+.fb.ko{background:var(--ko)}
+.info{display:flex;gap:6px;align-items:center}
+.stake{font:700 13px Inter;color:#1b1b1b;background:var(--gold);border-radius:99px;padding:1px 9px;white-space:nowrap}
+.res{font:700 14px Cinzel,serif;padding:2px 12px;border-radius:6px;background:#000a;color:#fff}
+.r-win .res{background:var(--ok)}
+.r-bj .res{background:var(--gold);color:#1b1b1b}
+.r-lose .res,.r-bust .res{background:#3b3f3d;color:#ffd1cb}
+.r-lose .cards,.r-bust .cards{opacity:.6}
+.spot{width:calc(var(--cw)*1.25);height:calc(var(--cw)*1.25);border-radius:50%;border:2px solid #f3d98b88;display:grid;place-items:center;font:700 18px Inter;color:var(--gold)}
+.shoe{position:absolute;top:12px;right:14px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:13px;color:#d7ecdd}
+.shoe .box{width:46px;height:34px;border-radius:5px 12px 5px 5px;background:linear-gradient(#2a2a2a,#111);border:1px solid #555;position:relative;overflow:hidden}
+.shoe .box i{position:absolute;left:4px;right:4px;bottom:4px;background:repeating-linear-gradient(90deg,#a8262f 0 2px,#fff 2px 3px);border-radius:2px}
+.dock{display:flex;flex-direction:column;gap:10px;padding:12px 4px 2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.dock[data-mode=bet] .acts,.dock[data-mode=play] .bets{display:none}
+.act{min-width:108px;height:50px;border-radius:12px;border:0;font:700 16px Inter;color:#fff;box-shadow:0 3px 0 #0008,0 6px 14px #0006;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s}
+.act:active{transform:translateY(2px)}
+.act kbd{font:600 13px Inter;background:#0003;border-radius:4px;padding:0 5px}
+#bHit{background:linear-gradient(#2fb36a,#1c7d47)}
+#bStand{background:linear-gradient(#e0533f,#a82c1f)}
+#bDouble{background:linear-gradient(#f6e08f,#c9a03e);color:#1b1b1b}
+#bSplit{background:linear-gradient(#3f8fe0,#1f5ca8)}
+.act:disabled,.gold:disabled{opacity:.32;filter:grayscale(.7);cursor:not-allowed;box-shadow:none}
+.act.hinted{outline:3px solid #fff;outline-offset:3px;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{outline-color:#ffffff44}}
+.chip{--c:#c62828;width:56px;height:56px;border-radius:50%;border:0;color:#fff;font:700 15px Inter;background:radial-gradient(circle,var(--c) 0 49%,#fff 50% 53%,transparent 54%),repeating-conic-gradient(var(--c) 0 22deg,#fff 22deg 30deg);box-shadow:0 3px 0 #0008,inset 0 0 0 2px #0003;text-shadow:0 1px 1px #000a}
+.chip:disabled{opacity:.3;cursor:not-allowed}
+.c10{--c:#1565c0}.c25{--c:#2e7d32}.c50{--c:#e06a00}.c100{--c:#1d1d1d}
+.betbox{display:flex;flex-direction:column;align-items:center;line-height:1.1;padding:0 8px}
+.betbox span{font-size:13px;color:#e8d3b5}
+#betAmt{font:700 22px Inter;color:var(--gold);white-space:nowrap}
+.ghost{height:44px;padding:0 14px;border-radius:10px;border:1px solid #ffffff44;background:#0003;color:#fff;font-weight:600}
+.gold{height:50px;padding:0 22px;border-radius:12px;border:0;background:linear-gradient(#f9e7a9,#d3ac4b);color:#1b1b1b;font:700 16px Inter;box-shadow:0 3px 0 #8a6a1f,0 6px 14px #0006}
+.opt{display:flex;align-items:center;gap:8px;justify-content:center;font-size:14px;color:#f0e2cc}
+.opt input{width:20px;height:20px;accent-color:var(--gold)}
+#hintLine{font-size:14px;color:#fff;min-height:1.2em;text-align:center}
+.modes{display:flex;flex-direction:column;align-items:center;gap:8px;border-top:1px solid #ffffff22;padding-top:10px;margin-top:2px}
+.modes>b{font:700 14px Cinzel,serif;color:var(--gold)}
+.mode{height:44px;padding:0 14px;border-radius:99px;border:1px solid #ffffff44;background:#0003;color:#fff;font:600 14px Inter}
+.mode[aria-checked=true]{background:var(--gold);color:#1b1b1b;border-color:var(--gold)}
+#modeNote{font-size:13px;color:var(--mut);text-align:center;max-width:560px}
+.modetag{position:absolute;top:12px;left:14px;z-index:2;font:600 13px Inter;background:#000a;border:1px solid #f3d98b66;border-radius:99px;padding:2px 10px;color:var(--gold);max-width:42%}
+.side{display:flex;flex-direction:column;gap:14px}
+.panel{background:#0e2219;border:1px solid #1f3d2e;border-radius:16px;padding:16px}
+h2{font:700 18px/1.1 Cinzel,serif;color:var(--gold);margin:0 0 12px}
+h3{font:600 14px Inter;margin:14px 0 8px;color:#d7ecdd}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{background:#ffffff08;border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font:700 26px/1.1 Inter;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--mut)}
+.meter{display:grid;grid-template-columns:4.5em minmax(0,1fr) 5.2em;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+.meter .bar{height:8px;background:#ffffff14;border-radius:4px;overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--ok)}
+.meter em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--mut);white-space:nowrap}
+.errs{list-style:none;margin:0;padding:0;font-size:13px}
+.errs li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #ffffff10}
+.errs li b{color:#ffb4a8;white-space:nowrap}
+.muted{color:var(--mut);font-size:13px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:4px 5px;text-align:left;border-bottom:1px solid #ffffff10;white-space:nowrap}
+th{color:var(--mut);font-weight:600}
+td.y{color:#5be095;font-weight:700}
+td.n{color:#ff8a7a;font-weight:700}
+#reset{margin-top:12px}
+details summary{cursor:pointer;font:700 16px Cinzel,serif;color:var(--gold)}
+.chart{margin-top:10px}
+.chart table{font-size:13px;text-align:center}
+.chart th,.chart td{text-align:center;padding:3px 0;width:26px;border:1px solid #07130d}
+.chart th:first-child{width:46px;text-align:left;padding-left:4px}
+.kH{background:#b9473b}.kS{background:#c9a43e;color:#1b1b1b}.kD{background:#2e9d5b}.kX{background:#6aa64a}.kY{background:#2f73c4}.kN{background:#ffffff10;color:var(--mut)}
+.legend{font-size:13px;color:var(--mut);margin:6px 0 10px}
+@media(max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){:root{--cw:58px}.felt{min-height:430px;padding:14px 8px}.act{min-width:74px;height:48px;font-size:15px}.act kbd{display:none}.chip{width:48px;height:48px;font-size:14px}.rail{padding:8px;border-radius:22px}.imprint text{font-size:26px}}
+@media(prefers-reduced-motion:reduce){.card.deal{animation:none}.act.hinted{animation:none}.in{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Blackjack · entraînement</h1>
+  <div class="bank">
+    <div><span>Solde</span><b id="balance">1 000 €</b></div>
+    <div><span>Précision (session)</span><b id="topPct">–</b></div>
+    <div><span>Série</span><b id="topStreak">0</b></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="rail" aria-label="Table de jeu">
+    <div class="felt">
+      <div class="modetag" id="modeTag" hidden></div>
+      <div class="shoe" title="Cartes restantes dans le sabot"><div class="box"><i id="shoeBar"></i></div><span id="shoeCount">312 cartes</span></div>
+      <div class="zone">
+        <div class="lbl">Croupier <span class="pill" id="dealerTotal"></span></div>
+        <div class="cards" id="dealerCards"></div>
+      </div>
+      <div class="middle">
+        <svg class="imprint" viewBox="0 0 600 150" aria-hidden="true">
+          <defs><path id="arc" d="M40,30 Q300,150 560,30"/></defs>
+          <text><textPath href="#arc" startOffset="50%" text-anchor="middle">LE BLACKJACK PAIE 3 CONTRE 2</textPath></text>
+          <text class="sub" x="300" y="128" text-anchor="middle">Le croupier reste sur tous les 17</text>
+        </svg>
+        <div id="msg" aria-live="polite"></div>
+        <div id="tip" aria-live="polite"></div>
+      </div>
+      <div class="zone"><div id="hands"></div></div>
+    </div>
+    <div class="dock" id="dock" data-mode="bet">
+      <div class="row acts">
+        <button class="act" id="bHit">Tirer <kbd>T</kbd></button>
+        <button class="act" id="bStand">Rester <kbd>R</kbd></button>
+        <button class="act" id="bDouble">Doubler <kbd>D</kbd></button>
+        <button class="act" id="bSplit">Séparer <kbd>S</kbd></button>
+      </div>
+      <div class="row bets">
+        <div class="row" id="chips"></div>
+        <div class="betbox"><span>Mise</span><b id="betAmt">25 €</b></div>
+        <button class="ghost" id="bClear">Effacer</button>
+        <button class="gold" id="bDeal">Distribuer <kbd>Espace</kbd></button>
+        <button class="ghost" id="bRebuy" hidden>Recharger 1 000 €</button>
+      </div>
+      <div id="hintLine"></div>
+      <label class="opt"><input type="checkbox" id="hintToggle"><span>Afficher un indice avant de jouer</span></label>
+      <div class="modes" role="radiogroup" aria-label="Mode d'entraînement">
+        <b>Mode d'entraînement</b>
+        <div class="row" id="modes"></div>
+        <div id="modeNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="panel">
+      <h2>Statistiques</h2>
+      <div class="kpis">
+        <div class="kpi"><b id="sesPct">–</b><span id="sesN">Session · 0 décision</span></div>
+        <div class="kpi"><b id="allPct">–</b><span id="allN">Global · 0 décision</span></div>
+        <div class="kpi"><b id="streak">0</b><span>Série en cours</span></div>
+        <div class="kpi"><b id="best">0</b><span>Meilleure série</span></div>
+      </div>
+      <h3>Précision par type de main</h3>
+      <div id="cats"></div>
+      <h3>Erreurs les plus fréquentes</h3>
+      <ul class="errs" id="errs"></ul>
+      <button class="ghost" id="reset">Remettre les stats à zéro</button>
+    </section>
+    <section class="panel">
+      <h2>Historique</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Main</th><th>Crp.</th><th>Choix</th><th>Optimal</th><th></th></tr></thead>
+        <tbody id="hist"></tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <details>
+        <summary>Table de stratégie de base</summary>
+        <p class="legend">6 jeux, croupier reste sur 17, double après split, sans reddition. T tirer · R rester · D doubler (sinon tirer) · Dr doubler (sinon rester) · S séparer · « · » jouer le total.</p>
+        <div class="chart scroll" id="chart"></div>
+      </details>
+    </section>
+  </aside>
+</main>
+
+<script>
+{
+/* =====================================================================
+   1. STRATÉGIE DE BASE — tables de lookup, indépendantes du moteur de jeu
+   Colonnes : carte visible du croupier 2 3 4 5 6 7 8 9 10 A
+   Codes : H tirer · S rester · D doubler sinon tirer · X doubler sinon rester
+   Paires : Y séparer · N ne pas séparer (on retombe sur soft/dur)
+   ===================================================================== */
+const DEALER_COLS = ['2','3','4','5','6','7','8','9','10','A'];
+const STRATEGY = {
+  hard: {
+    4:'HHHHHHHHHH', 5:'HHHHHHHHHH', 6:'HHHHHHHHHH', 7:'HHHHHHHHHH', 8:'HHHHHHHHHH',
+    9:'HDDDDHHHHH', 10:'DDDDDDDDHH', 11:'DDDDDDDDDH', 12:'HHSSSHHHHH',
+    13:'SSSSSHHHHH', 14:'SSSSSHHHHH', 15:'SSSSSHHHHH', 16:'SSSSSHHHHH'
+    // 17 et plus : rester partout
+  },
+  soft: {
+    12:'HHHHHHHHHH',                  // A+A non séparable
+    13:'HHHDDHHHHH', 14:'HHHDDHHHHH', // A+2, A+3
+    15:'HHDDDHHHHH', 16:'HHDDDHHHHH', // A+4, A+5
+    17:'HDDDDHHHHH',                  // A+6
+    18:'SXXXXSSHHH',                  // A+7
+    19:'SSSSSSSSSS', 20:'SSSSSSSSSS', 21:'SSSSSSSSSS'
+  },
+  pairs: {
+    A:'YYYYYYYYYY', 10:'NNNNNNNNNN', 9:'YYYYYNYYNN', 8:'YYYYYYYYYY', 7:'YYYYYYNNNN',
+    6:'YYYYYNNNNN', 5:'NNNNNNNNNN', 4:'NNNYYNNNNN', 3:'YYYYYYNNNN', 2:'YYYYYYNNNN'
+  }
+};
+const ACTION_FR = {hit:'Tirer', stand:'Rester', double:'Doubler', split:'Séparer'};
+
+/* ---------- Valeurs des cartes et des mains ---------- */
+const cardValue = c => c.rank === 'A' ? 11 : /^(10|J|Q|K)$/.test(c.rank) ? 10 : +c.rank;
+function handValue(cards){
+  let t = 0, aces = 0;
+  for (const c of cards){ if (c.rank === 'A'){ aces++; t += 1; } else t += cardValue(c); }
+  const soft = aces > 0 && t + 10 <= 21;          // un as compte 11 sans dépasser 21
+  return {total: soft ? t + 10 : t, soft};
+}
+const isBJ = cards => cards.length === 2 && handValue(cards).total === 21;
+const isPair = cards => cards.length === 2 && cardValue(cards[0]) === cardValue(cards[1]);
+const pairKey = c => cardValue(c) === 11 ? 'A' : String(cardValue(c));
+const colIndex = up => cardValue(up) === 11 ? 9 : cardValue(up) - 2;
+const upLabel = up => up.rank === 'A' ? 'A' : String(cardValue(up));
+
+/* Action optimale. can = {double, split} : actions réellement possibles. Priorité : paire → soft → dur */
+function recommend(cards, up, can){
+  const i = colIndex(up), {total, soft} = handValue(cards);
+  const pair = isPair(cards) && can.split;
+  const cat = pair ? 'pair' : soft ? 'soft' : 'hard';
+  if (pair && STRATEGY.pairs[pairKey(cards[0])][i] === 'Y') return {action:'split', cat, total, soft};
+  const code = soft ? STRATEGY.soft[total][i] : total >= 17 ? 'S' : STRATEGY.hard[Math.max(total,4)][i];
+  const action = code === 'H' ? 'hit' : code === 'S' ? 'stand'
+    : code === 'D' ? (can.double ? 'double' : 'hit') : (can.double ? 'double' : 'stand');
+  return {action, cat, total, soft};
+}
+function handLabel(cards, cat){
+  const {total} = handValue(cards);
+  if (cat === 'pair'){ const k = pairKey(cards[0]); return `Paire ${k}-${k}`; }
+  if (cat === 'soft') return cards.length === 2 && total > 12 ? `Soft ${total} (A+${total-11})` : `Soft ${total}`;
+  return `Dur ${total}`;
+}
+function reasonFor(rec, cards, up){
+  const weak = cardValue(up) <= 6, t = rec.total;
+  if (rec.action === 'split'){
+    const k = pairKey(cards[0]);
+    if (k === 'A') return 'Deux mains partant d’un as valent bien mieux qu’un 12 soft.';
+    if (k === '8') return '16 est la pire main : deux mains partant de 8 sont plus fortes.';
+    return weak ? 'Le croupier est faible : séparer met plus d’argent en jeu au bon moment.'
+                : 'Chaque main partant de cette carte vaut mieux que la main d’origine ici.';
+  }
+  if (rec.action === 'double') return !rec.soft ? 'Total idéal pour recevoir une seule carte : doubler maximise le gain.'
+    : 'Le croupier risque de sauter et une main soft ne peut pas sauter : doublez.';
+  if (rec.action === 'stand'){
+    if (t >= 17) return 'Main assez forte : tirer ferait trop souvent sauter.';
+    return weak ? 'Le croupier montre une carte faible et sautera souvent : ne prenez pas de risque.' : 'Main suffisante contre cette carte.';
+  }
+  if (rec.soft) return 'Une main soft ne peut pas sauter sur une carte : améliorez-la.';
+  if (t <= 11) return 'Aucun risque de sauter : tirez.';
+  if (!weak) return 'Le croupier part fort (7 à As) : votre main doit s’améliorer.';
+  return '12 contre 2 ou 3 : le croupier ne saute pas assez souvent pour rester.';
+}
+
+/* =====================================================================
+   2. MOTEUR DE JEU
+   ===================================================================== */
+const SUITS = ['♠','♥','♦','♣'], RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const DECKS = 6, CHIPS = [5,10,25,50,100], START = 1000, DELAY = 380;
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fmt = n => n.toLocaleString('fr-FR', {maximumFractionDigits:2}) + ' €';
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const freshStats = () => ({total:0, correct:0, streak:0, best:0,
+  cats:{hard:{t:0,c:0}, soft:{t:0,c:0}, pair:{t:0,c:0}}, errors:{}, history:[]});
+
+const S = {shoe:[], cut:0, balance:START, bet:25, phase:'bet', busy:false, mode:'all',
+           dealer:[], hands:[], active:0, natural:false};
+let ST = freshStats();
+const SES = {total:0, correct:0};
+
+function newShoe(){
+  S.shoe = [];
+  for (let d = 0; d < DECKS; d++) for (const suit of SUITS) for (const rank of RANKS) S.shoe.push({rank, suit});
+  for (let i = S.shoe.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [S.shoe[i], S.shoe[j]] = [S.shoe[j], S.shoe[i]]; }
+  S.cut = Math.round(S.shoe.length * 0.25);   // remélange après ~75 % distribuées
+}
+/* ---------- Modes d'entraînement : la main de départ est choisie puis placée dans le sabot ---------- */
+const MODES = [
+  ['all','Tout au hasard','Mains distribuées au hasard.'],
+  ['pair','Paires','Uniquement des paires (A-A à 10-10), contre tous les croupiers à parts égales.'],
+  ['soft','Soft','Uniquement des mains avec un As (A+2 à A+9).'],
+  ['double','Doubler ou pas','Les mains où se pose la question du double : durs 8 à 11 et soft 13 à 18.'],
+  ['hard','Dur 12-16','Les totaux durs 12 à 16, les plus délicats à jouer.'],
+  ['weak','Mes points faibles','7 mains sur 10 reprennent tes erreurs les plus fréquentes, le reste est au hasard.']
+];
+const CRANKS = ['A','2','3','4','5','6','7','8','9','T'];          // T = n'importe quelle bûche
+const sample = r => ({rank: r === 'T' ? '10' : r, suit: '♠'});
+const handKey = (rec, cards) => rec.cat === 'pair' ? pairKey(cards[0]) : rec.total;
+let COMBOS = null;
+function combos(){                                                  // toutes les situations de départ possibles
+  if (COMBOS) return COMBOS;
+  COMBOS = [];
+  for (const a of CRANKS) for (const b of CRANKS) for (const u of CRANKS){
+    const cards = [sample(a), sample(b)];
+    if (isBJ(cards)) continue;
+    const up = sample(u), rec = recommend(cards, up, {double:true, split:true});
+    COMBOS.push({a, b, u, cat:rec.cat, total:rec.total, soft:rec.soft, action:rec.action, key:handKey(rec, cards), col:colIndex(up)});
+  }
+  return COMBOS;
+}
+const POOLS = {
+  pair: c => c.cat === 'pair',
+  soft: c => c.cat === 'soft',
+  double: c => c.action !== 'split' && (c.soft ? c.total >= 13 && c.total <= 18 : c.total >= 8 && c.total <= 11),
+  hard: c => c.cat === 'hard' && c.total >= 12 && c.total <= 16
+};
+function pickCombo(){
+  const all = combos();
+  if (S.mode === 'weak'){
+    const errs = Object.values(ST.errors).filter(e => e.spec);
+    if (!errs.length || Math.random() > .7) return null;
+    let r = Math.random() * errs.reduce((s, e) => s + e.n, 0);
+    const e = errs.find(x => (r -= x.n) < 0) || errs[0];
+    const m = all.filter(c => c.cat === e.spec.cat && c.key === e.spec.key && c.col === e.spec.col);
+    return m.length ? m[Math.floor(Math.random() * m.length)] : null;
+  }
+  const f = POOLS[S.mode]; if (!f) return null;
+  const m = all.filter(f);
+  return m[Math.floor(Math.random() * m.length)];
+}
+function rigDeal(){
+  const c = pickCombo(); if (!c) return;
+  const take = r => {
+    const ix = [];
+    S.shoe.forEach((x, i) => { if (r === 'T' ? cardValue(x) === 10 : x.rank === r) ix.push(i); });
+    return ix.length ? S.shoe.splice(ix[Math.floor(Math.random() * ix.length)], 1)[0] : null;
+  };
+  for (let t = 0; t < 2; t++){
+    const p1 = take(c.a), up = take(c.u), p2 = take(c.b);
+    if (p1 && up && p2){
+      const hole = S.shoe.splice(Math.floor(Math.random() * S.shoe.length), 1)[0];
+      S.shoe.push(hole, p2, up, p1);      // ordre de distribution : joueur, croupier visible, joueur, carte cachée
+      return;
+    }
+    for (const x of [p1, up, p2]) if (x) S.shoe.push(x);
+    newShoe();                            // une carte demandée est épuisée : on remélange le sabot
+  }
+}
+const mkHand = bet => ({cards:[], bet, doubled:false, done:false, split:false, aces:false, result:null, fb:null});
+function opts(h){
+  if (!h) return {};
+  return {
+    double: h.cards.length === 2 && !h.aces && S.balance >= h.bet,
+    split: isPair(h.cards) && S.hands.length < 4 && !h.aces && S.balance >= h.bet
+  };
+}
+
+/* ---------- Rendu ---------- */
+function cardEl(c, anim){
+  const red = c.suit === '♥' || c.suit === '♦', face = /^[JQK]$/.test(c.rank);
+  const d = document.createElement('div');
+  d.className = 'card' + (anim ? ' deal' : '') + (c.hidden ? ' down' : '');
+  d.innerHTML = `<div class="in"><div class="face${red?' red':''}"><b class="tl">${c.rank}<i>${c.suit}</i></b>`+
+    `<span class="mid${face?' fc':''}">${face ? c.rank : c.suit}</span><b class="br">${c.rank}<i>${c.suit}</i></b></div><div class="back"></div></div>`;
+  return d;
+}
+function totalStr(cards, final, bj){
+  if (!cards.length) return '';
+  if (bj) return 'Blackjack';
+  const {total, soft} = handValue(cards);
+  return soft && !final && total < 21 ? `${total-10}/${total}` : String(total);
+}
+const RES_FR = {win:'Gagné', lose:'Perdu', push:'Égalité', bj:'Blackjack !', bust:'Bust'};
+function renderHands(){
+  const el = $('hands'); el.innerHTML = '';
+  if (!S.hands.length){ el.innerHTML = `<div class="spot">${fmt(S.bet)}</div>`; return; }
+  S.hands.forEach((h, i) => {
+    const w = document.createElement('div');
+    w.className = 'hand' + (S.phase === 'play' && i === S.active ? ' active' : '') + (h.result ? ' r-' + h.result : '');
+    const fb = h.fb ? `<div class="fb ${h.fb.ok?'ok':'ko'}">${h.fb.ok ? '✓ Bon choix' : '✗ Erreur – le bon choix était : ' + h.fb.opt}</div>` : '';
+    const final = h.done || S.phase !== 'play';
+    w.innerHTML = `${fb}<div class="cards"></div><div class="info"><span class="pill">${totalStr(h.cards, final, isBJ(h.cards) && !h.split)}</span>`+
+      `<span class="stake">${fmt(h.bet)}${h.doubled?' ×2':''}</span></div>${h.result ? `<div class="res">${RES_FR[h.result]}</div>` : ''}`;
+    const cd = w.querySelector('.cards');
+    for (const c of h.cards){ cd.appendChild(cardEl(c, !c.shown)); c.shown = true; }
+    el.appendChild(w);
+  });
+}
+function renderDealerTotal(){
+  const d = S.dealer;
+  $('dealerTotal').textContent = !d.length ? '' : d[1]?.hidden ? totalStr([d[0]], false, false) : totalStr(d, true, isBJ(d));
+}
+const say = t => { $('msg').textContent = t; };
+function tip(t, ok){ const e = $('tip'); e.textContent = t; e.className = t ? (ok ? 'ok' : 'ko') : ''; }
+
+function updateUI(){
+  const play = S.phase === 'play' && !S.busy, h = S.hands[S.active], o = play ? opts(h) : {};
+  const bet = S.phase === 'bet' && !S.busy;
+  $('dock').dataset.mode = S.phase === 'bet' ? 'bet' : 'play';
+  $('bHit').disabled = $('bStand').disabled = !play;
+  $('bDouble').disabled = !o.double; $('bSplit').disabled = !o.split;
+  document.querySelectorAll('.chip').forEach(b => b.disabled = !bet || S.bet + (+b.dataset.v) > S.balance);
+  $('bClear').disabled = !bet || !S.bet;
+  $('bDeal').disabled = !bet || S.bet <= 0 || S.bet > S.balance;
+  $('bDeal').firstChild.textContent = S.hands.length ? 'Nouvelle main ' : 'Distribuer ';
+  $('bRebuy').hidden = !(bet && S.balance < CHIPS[0]);
+  $('betAmt').textContent = fmt(S.bet);
+  $('balance').textContent = fmt(S.balance);
+  $('shoeCount').textContent = S.shoe.length + ' cartes';
+  $('shoeBar').style.height = Math.max(8, 100 * S.shoe.length / (DECKS*52) * .8) + '%';
+  document.querySelectorAll('.act').forEach(b => b.classList.remove('hinted'));
+  let line = '';
+  if (play && $('hintToggle').checked){
+    const rec = recommend(h.cards, S.dealer[0], o);
+    $({hit:'bHit', stand:'bStand', double:'bDouble', split:'bSplit'}[rec.action]).classList.add('hinted');
+    line = `Indice : ${ACTION_FR[rec.action]} (${handLabel(h.cards, rec.cat)} contre ${upLabel(S.dealer[0])})`;
+  }
+  $('hintLine').textContent = line;
+}
+
+/* ---------- Distribution ---------- */
+async function drawTo(h){ h.cards.push(S.shoe.pop()); renderHands(); updateUI(); await sleep(DELAY); }
+async function drawDealer(hidden){
+  const c = S.shoe.pop(); c.hidden = hidden; S.dealer.push(c);
+  c.el = cardEl(c, true); $('dealerCards').appendChild(c.el);
+  renderDealerTotal(); updateUI(); await sleep(DELAY);
+}
+async function reveal(){
+  const c = S.dealer[1]; if (!c || !c.hidden) return;
+  c.hidden = false; c.el.classList.remove('down'); renderDealerTotal(); await sleep(550);
+}
+
+async function deal(){
+  if (S.phase !== 'bet' || S.busy || S.bet <= 0 || S.bet > S.balance) return;
+  S.busy = true;
+  if (S.shoe.length < S.cut){ newShoe(); say('Nouveau sabot : 6 jeux mélangés'); await sleep(700); }
+  S.balance -= S.bet;
+  S.hands = [mkHand(S.bet)]; S.dealer = []; S.active = 0; S.natural = false; S.phase = 'deal';
+  $('dealerCards').innerHTML = ''; renderDealerTotal(); say(''); tip('');
+  renderHands(); updateUI();
+  rigDeal();
+  const h = S.hands[0];
+  await drawTo(h); await drawDealer(false); await drawTo(h); await drawDealer(true);
+  const pBJ = isBJ(h.cards);
+  if (cardValue(S.dealer[0]) >= 10){                 // peek sur As ou bûche
+    say('Le croupier vérifie sa carte cachée…'); await sleep(650);
+    if (isBJ(S.dealer)){ S.natural = pBJ; await reveal(); return settle(); }
+    say('Pas de blackjack pour le croupier');
+  }
+  if (pBJ){ S.natural = true; await reveal(); return settle(); }
+  S.phase = 'play'; S.busy = false;
+  renderHands(); updateUI();
+}
+
+/* ---------- Décisions du joueur (toujours appliquées, même fausses) ---------- */
+async function act(a){
+  if (S.phase !== 'play' || S.busy) return;
+  const h = S.hands[S.active], o = opts(h);
+  if ((a === 'double' && !o.double) || (a === 'split' && !o.split)) return;
+  record(h, a, recommend(h.cards, S.dealer[0], o));
+  S.busy = true; say(''); updateUI();
+  if (a === 'hit'){
+    await drawTo(h);
+    const t = handValue(h.cards).total;
+    if (t > 21){ h.done = true; h.result = 'bust'; } else if (t === 21) h.done = true;
+  } else if (a === 'stand'){
+    h.done = true;
+  } else if (a === 'double'){
+    S.balance -= h.bet; h.bet *= 2; h.doubled = true;
+    await drawTo(h); h.done = true;
+    if (handValue(h.cards).total > 21) h.result = 'bust';
+  } else if (a === 'split'){
+    S.balance -= h.bet;
+    const c = h.cards.pop(), n = mkHand(h.bet);
+    n.cards = [c]; n.split = h.split = true;
+    if (c.rank === 'A') n.aces = h.aces = true;      // un seul tirage sur les as séparés
+    S.hands.splice(S.active + 1, 0, n);
+    renderHands(); await sleep(220);
+    await drawTo(h);
+    if (h.aces || handValue(h.cards).total === 21) h.done = true;
+  }
+  renderHands();
+  if (h.done) await nextHand(); else { S.busy = false; updateUI(); renderHands(); }
+}
+async function nextHand(){
+  for (;;){
+    S.active++;
+    if (S.active >= S.hands.length) return dealerTurn();
+    const h = S.hands[S.active];
+    renderHands();
+    if (h.cards.length === 1){
+      await sleep(180); await drawTo(h);
+      if (h.aces || handValue(h.cards).total === 21) h.done = true;
+    }
+    if (!h.done){ S.busy = false; renderHands(); updateUI(); return; }
+  }
+}
+async function dealerTurn(){
+  S.phase = 'dealer'; S.active = -1; renderHands(); updateUI();
+  await reveal();
+  if (S.hands.some(h => h.result !== 'bust'))
+    while (handValue(S.dealer).total < 17) await drawDealer(false);   // reste sur tous les 17
+  settle();
+}
+function settle(){
+  const d = handValue(S.dealer).total, dBJ = isBJ(S.dealer);
+  let ret = 0, stake = 0;
+  for (const h of S.hands){
+    const p = handValue(h.cards).total; stake += h.bet;
+    let r;
+    if (h.result === 'bust') r = 'bust';
+    else if (S.natural) r = dBJ ? 'push' : 'bj';
+    else if (dBJ) r = 'lose';
+    else if (d > 21 || p > d) r = 'win';
+    else r = p === d ? 'push' : 'lose';
+    h.result = r;
+    ret += r === 'bj' ? h.bet * 2.5 : r === 'win' ? h.bet * 2 : r === 'push' ? h.bet : 0;
+  }
+  S.balance += ret;
+  const net = ret - stake;
+  say((dBJ ? 'Blackjack du croupier. ' : d > 21 ? 'Le croupier saute. ' : '') +
+      (net > 0 ? `Vous gagnez +${fmt(net)}` : net < 0 ? `Vous perdez −${fmt(-net)}` : 'Égalité : mise rendue'));
+  S.phase = 'bet'; S.busy = false;
+  if (S.bet > S.balance) S.bet = Math.floor(S.balance / 5) * 5;
+  store.set('bj-balance', S.balance);
+  renderDealerTotal(); renderHands(); updateUI();
+}
+
+/* =====================================================================
+   3. SUIVI DES DÉCISIONS ET STATISTIQUES
+   ===================================================================== */
+function record(h, a, rec){
+  const ok = a === rec.action, up = S.dealer[0], dl = upLabel(up);
+  const label = handLabel(h.cards, rec.cat), opt = ACTION_FR[rec.action];
+  ST.total++; SES.total++;
+  if (ok){ ST.correct++; SES.correct++; }
+  ST.streak = ok ? ST.streak + 1 : 0; ST.best = Math.max(ST.best, ST.streak);
+  ST.cats[rec.cat].t++; if (ok) ST.cats[rec.cat].c++;
+  if (!ok){ const k = `${label} vs ${dl}`; const e = ST.errors[k] || {n:0}; e.n++; e.opt = opt; e.spec = {cat: rec.cat, key: handKey(rec, h.cards), col: colIndex(up)}; ST.errors[k] = e; }
+  ST.history.unshift({h:label, d:dl, me:ACTION_FR[a], opt, ok});
+  ST.history.length = Math.min(ST.history.length, 20);
+  store.set('bj-stats', ST);
+  h.fb = {ok, opt};
+  const why = `${label} contre ${dl} du croupier : ${opt.toLowerCase()}. ${reasonFor(rec, h.cards, up)}`;
+  tip(ok ? `✓ ${why}` : `✗ Vous avez choisi « ${ACTION_FR[a]} ». ${why}`, ok);
+  renderStats();
+}
+const pct = (c, t) => t ? Math.round(100 * c / t) + ' %' : '–';
+const plural = n => n + (n > 1 ? ' décisions' : ' décision');
+function renderStats(){
+  $('sesPct').textContent = $('topPct').textContent = pct(SES.correct, SES.total);
+  $('sesN').textContent = 'Session · ' + plural(SES.total);
+  $('allPct').textContent = pct(ST.correct, ST.total);
+  $('allN').textContent = 'Global · ' + plural(ST.total);
+  $('streak').textContent = $('topStreak').textContent = ST.streak;
+  $('best').textContent = ST.best;
+  $('cats').innerHTML = [['hard','Dures'],['soft','Soft'],['pair','Paires']].map(([k, n]) => {
+    const {t, c} = ST.cats[k], p = t ? 100 * c / t : 0;
+    return `<div class="meter"><span>${n}</span><div class="bar"><i style="width:${p}%"></i></div><em>${c}/${t} · ${pct(c,t)}</em></div>`;
+  }).join('');
+  const errs = Object.entries(ST.errors).sort((a, b) => b[1].n - a[1].n).slice(0, 6);
+  $('errs').innerHTML = errs.length ? errs.map(([k, e]) => `<li><span>${k} → ${e.opt}</span><b>${e.n}×</b></li>`).join('')
+    : '<li class="muted">Aucune erreur pour l’instant.</li>';
+  $('hist').innerHTML = ST.history.length ? ST.history.map(r =>
+    `<tr><td>${r.h}</td><td>${r.d}</td><td>${r.me}</td><td>${r.opt}</td><td class="${r.ok?'y':'n'}">${r.ok?'✓':'✗'}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="muted">Vos décisions apparaîtront ici.</td></tr>';
+  renderModes();
+}
+function renderModes(){
+  document.querySelectorAll('.mode').forEach(b => b.setAttribute('aria-checked', String(b.dataset.m === S.mode)));
+  const m = MODES.find(x => x[0] === S.mode) || MODES[0];
+  let note = m[2] + (S.mode === 'all' ? '' : ' S’applique dès la prochaine main.');
+  if (S.mode === 'weak' && !Object.values(ST.errors).some(e => e.spec)) note += ' Aucune erreur enregistrée pour l’instant : mains au hasard.';
+  $('modeNote').textContent = note;
+  $('modeTag').hidden = S.mode === 'all';
+  $('modeTag').textContent = 'Mode : ' + m[1];
+}
+function renderChart(){
+  const sym = {H:'T', S:'R', D:'D', X:'Dr', Y:'S', N:'·'};
+  const row = (lbl, codes) => `<tr><th>${lbl}</th>${[...codes].map(c => `<td class="k${c}">${sym[c]}</td>`).join('')}</tr>`;
+  const head = t => `<tr><th>${t}</th>${DEALER_COLS.map(c => `<th>${c}</th>`).join('')}</tr>`;
+  const hard = [row('5–8', STRATEGY.hard[8]), ...[9,10,11,12,13,14,15,16].map(n => row(n, STRATEGY.hard[n])), row('17+', 'SSSSSSSSSS')];
+  const soft = [13,14,15,16,17,18,19,20].map(n => row('A+' + (n-11), STRATEGY.soft[n]));
+  const pairs = ['A','10','9','8','7','6','5','4','3','2'].map(k => row(`${k}-${k}`, STRATEGY.pairs[k]));
+  $('chart').innerHTML = `<table>${head('Dur')}${hard.join('')}</table><h3>Mains soft</h3><table>${head('Soft')}${soft.join('')}</table>`+
+    `<h3>Paires</h3><table>${head('Paire')}${pairs.join('')}</table>`;
+}
+
+/* =====================================================================
+   4. ÉVÉNEMENTS ET DÉMARRAGE
+   ===================================================================== */
+$('chips').innerHTML = CHIPS.map(v => `<button class="chip c${v}" data-v="${v}" aria-label="Ajouter ${v} €">${v}</button>`).join('');
+$('chips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b || b.disabled) return;
+  S.bet += +b.dataset.v; if (!S.hands.length) renderHands(); updateUI();
+});
+$('modes').innerHTML = MODES.map(([k, n]) => `<button class="mode" role="radio" aria-checked="false" data-m="${k}">${n}</button>`).join('');
+$('modes').addEventListener('click', e => {
+  const b = e.target.closest('.mode'); if (!b) return;
+  S.mode = b.dataset.m; store.set('bj-mode', S.mode); renderModes();
+});
+$('bClear').onclick = () => { S.bet = 0; if (!S.hands.length) renderHands(); updateUI(); };
+$('bDeal').onclick = deal;
+$('bRebuy').onclick = () => { S.balance = START; S.bet = 25; store.set('bj-balance', S.balance); say('Solde rechargé'); updateUI(); };
+$('bHit').onclick = () => act('hit');
+$('bStand').onclick = () => act('stand');
+$('bDouble').onclick = () => act('double');
+$('bSplit').onclick = () => act('split');
+$('hintToggle').onchange = e => { store.set('bj-hint', e.target.checked); updateUI(); };
+let resetArmed = null;
+$('reset').onclick = e => {
+  if (!resetArmed){ e.target.textContent = 'Confirmer la remise à zéro'; resetArmed = setTimeout(() => { resetArmed = null; e.target.textContent = 'Remettre les stats à zéro'; }, 3000); return; }
+  clearTimeout(resetArmed); resetArmed = null; e.target.textContent = 'Remettre les stats à zéro';
+  ST = freshStats(); SES.total = SES.correct = 0; store.set('bj-stats', ST); renderStats();
+};
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  const map = {t:'hit', r:'stand', d:'double', s:'split'};
+  if (map[k]){ e.preventDefault(); act(map[k]); }
+  else if ((k === ' ' || k === 'enter') && S.phase === 'bet' && !e.target.matches('button')){ e.preventDefault(); deal(); }
+});
+
+function start(data){
+  S.balance = typeof data.balance === 'number' ? data.balance : store.get('bj-balance', START);
+  S.bet = typeof data.bet === 'number' ? data.bet : 25;
+  if (S.bet > S.balance) S.bet = Math.floor(S.balance / 5) * 5;
+  ST = Object.assign(freshStats(), store.get('bj-stats', {}));
+  $('hintToggle').checked = !!store.get('bj-hint', false);
+  const sm = store.get('bj-mode', 'all'); S.mode = MODES.some(m => m[0] === sm) ? sm : 'all';
+  newShoe(); renderStats(); renderChart(); renderHands(); updateUI();
+  say('Placez votre mise puis distribuez');
+  if (S.bet > 0 && S.bet <= S.balance) setTimeout(deal, 500);
+}
+window.claude?.hot?.snapshot?.(() => ({balance:S.balance, bet:S.bet}));
+const boot = d => start(d || {});
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+}
+</script>
+</body>
+</html>
