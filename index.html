@@ -16,11 +16,12 @@
 :root{color-scheme:dark;--cw:84px;--ch:calc(var(--cw)*1.4);--spd:1;--gold:#f3d98b;--ok:#22a35a;--ko:#d2412f;--ink:#eef3ee;--mut:#a9c2b2}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:#07130d;color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+[hidden]{display:none!important}
 button,select{font:inherit;cursor:pointer}
 button:focus-visible,select:focus-visible,input:focus-visible,input:focus-visible+span,summary:focus-visible{outline:3px solid #fff;outline-offset:2px}
 
 /* ---------- En-tête ---------- */
-.top{display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;padding:14px max(16px,3vw);max-width:1400px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px 24px;flex-wrap:wrap;padding:10px max(16px,3vw);max-width:1400px;margin:0 auto}
 h1{font:700 clamp(22px,3vw,30px)/1.05 Cinzel,Georgia,serif;margin:0;color:var(--gold)}
 .topr{display:flex;align-items:center;gap:12px 22px;flex-wrap:wrap}
 .bank{display:flex;gap:22px;flex-wrap:wrap}
@@ -31,14 +32,33 @@ h1{font:700 clamp(22px,3vw,30px)/1.05 Cinzel,Georgia,serif;margin:0;color:var(--
 .bank em.up{color:#5be095}.bank em.dn{color:#ff8a7a}
 
 /* ---------- Table ---------- */
-.wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;padding:0 max(16px,3vw) 28px;max-width:1400px;margin:0 auto;align-items:start}
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;padding:0 max(16px,3vw) 28px;max-width:1400px;margin:0 auto;align-items:start}
 .rail{background:linear-gradient(#70411d,#3a1e0b);border-radius:30px;padding:12px;box-shadow:0 18px 40px #000b,inset 0 2px 0 #a06a3a}
-.felt{position:relative;border-radius:22px 22px 12px 12px;background:radial-gradient(120% 90% at 50% 18%,#25995d 0%,#157043 45%,#0a4428 100%);min-height:clamp(440px,62vh,600px);display:grid;grid-template-rows:auto 1fr auto;gap:8px;padding:18px 14px;overflow:hidden;box-shadow:inset 0 0 90px #000a}
+.felt{position:relative;border-radius:22px 22px 12px 12px;background:radial-gradient(120% 90% at 50% 18%,#25995d 0%,#157043 45%,#0a4428 100%);min-height:clamp(460px,62vh,600px);display:grid;grid-template-rows:auto 1fr auto;gap:8px;padding:18px 14px;overflow:hidden;box-shadow:inset 0 0 90px #000a}
 .felt::before{content:"";position:absolute;inset:0;background:repeating-radial-gradient(circle at 30% 30%,#ffffff05 0 1px,transparent 1px 3px);pointer-events:none}
 .zone{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:1}
 .lbl{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;color:#d7ecdd}
 .pill{background:#000a;border:1px solid #f3d98b66;border-radius:99px;padding:1px 10px;font:700 14px Inter;font-variant-numeric:tabular-nums;color:#fff;white-space:nowrap}
 .pill:empty{display:none}
+
+/* ---------- Croupier ---------- */
+.dtop{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:center;gap:6px 16px;width:100%;padding-right:64px}
+.dtable{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.dealer{flex:none;width:clamp(72px,10vw,108px)}
+.dealer svg{display:block;width:100%;height:auto;filter:drop-shadow(0 6px 8px #0008)}
+.dealer .m{display:none}
+.dealer[data-mood=idle] .m-idle,.dealer[data-mood=smile] .m-smile,.dealer[data-mood=wink] .m-smile,.dealer[data-mood=wow] .m-wow,.dealer[data-mood=sad] .m-sad{display:inline}
+.dealer svg .eyes circle,.dealer svg .brow{transform-box:fill-box;transform-origin:center}
+.dealer .eyes circle{animation:blink 5.5s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.dealer[data-mood=wink] .e2{animation:none;transform:scaleY(.12)}
+.dealer[data-mood=wow] .brow{transform:translateY(-3px)}
+.dealer[data-mood=sad] .brow{transform:translateY(2px)}
+.dealer.dealing svg{animation:flick .3s ease-in-out 4}
+@keyframes flick{50%{transform:translateY(-4px) rotate(-2deg)}}
+.bubble{position:relative;align-self:center;min-height:28px;max-width:260px;padding:4px 12px;border-radius:12px;background:#fff;color:#15171a;font:600 13px/1.25 Inter;text-align:center;box-shadow:0 3px 8px #0006}
+.bubble:empty{visibility:hidden}
+.bubble::before{content:"";position:absolute;left:-6px;top:50%;margin-top:-6px;border:6px solid transparent;border-left:0;border-right-color:#fff}
 
 /* ---------- Cartes ---------- */
 .cards{display:flex;justify-content:center;min-height:var(--ch)}
@@ -62,7 +82,7 @@ h1{font:700 clamp(22px,3vw,30px)/1.05 Cinzel,Georgia,serif;margin:0;color:var(--
 
 /* ---------- Centre de la table : sérigraphie, messages ---------- */
 .middle{position:relative;display:grid;place-items:center;align-content:center;gap:8px;text-align:center;z-index:1}
-.imprint{position:absolute;left:50%;top:50%;width:min(560px,96%);transform:translate(-50%,-62%);opacity:.32;pointer-events:none}
+.imprint{position:absolute;left:50%;top:50%;width:min(460px,88%);transform:translate(-50%,-58%);opacity:.26;pointer-events:none}
 .imprint text{font:700 23px Cinzel,serif;fill:var(--gold)}
 .imprint .sub{font:600 15px Cinzel,serif}
 #msg{font:600 clamp(16px,2vw,19px)/1.3 Inter;color:#fff;text-shadow:0 1px 3px #000;min-height:1.3em}
@@ -98,7 +118,7 @@ h1{font:700 clamp(22px,3vw,30px)/1.05 Cinzel,Georgia,serif;margin:0;color:var(--
 .shoe{position:absolute;top:12px;right:14px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:13px;color:#d7ecdd}
 .shoe .box{width:46px;height:34px;border-radius:5px 12px 5px 5px;background:linear-gradient(#2a2a2a,#111);border:1px solid #555;position:relative;overflow:hidden}
 .shoe .box i{position:absolute;left:4px;right:4px;bottom:4px;background:repeating-linear-gradient(90deg,#a8262f 0 2px,#fff 2px 3px);border-radius:2px}
-.modetag{position:absolute;top:12px;left:14px;z-index:2;font:600 13px Inter;background:#000a;border:1px solid #f3d98b66;border-radius:99px;padding:2px 10px;color:var(--gold);max-width:42%}
+.modetag{font:600 13px Inter;background:#000a;border:1px solid #f3d98b66;border-radius:99px;padding:2px 10px;color:var(--gold)}
 
 /* ---------- Commandes (dock) ---------- */
 .dock{display:flex;flex-direction:column;gap:10px;padding:12px 4px 2px}
@@ -136,8 +156,15 @@ kbd{font:600 13px Inter;background:#0003;border-radius:4px;padding:0 5px}
 .nameIn{height:44px;width:128px;padding:0 12px;border-radius:10px;border:1px solid #ffffff44;background:#0005;color:#fff;font:16px Inter}
 
 /* ---------- Colonne latérale ---------- */
-.side{display:flex;flex-direction:column;gap:14px}
+.side{display:flex;flex-direction:column;position:sticky;top:10px;max-height:calc(100vh - 20px);min-height:0}
 .panel{background:#0e2219;border:1px solid #1f3d2e;border-radius:16px;padding:16px}
+.side.panel{padding:10px 14px 14px}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;border-bottom:1px solid #1f3d2e;margin:0 -4px 12px;padding:0 0 8px}
+.tab{min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--mut);font:600 13px Inter;padding:0 4px}
+.tab[aria-selected=true]{background:#ffffff14;color:var(--gold)}
+.tpw{overflow:auto;min-height:0;flex:1;padding:2px 2px 4px}
+.ghost[aria-pressed=true]{background:var(--gold);color:#1b1b1b;border-color:var(--gold)}
+.sel input[type=range]{width:150px;height:32px;accent-color:var(--gold)}
 h2{font:700 18px/1.1 Cinzel,serif;color:var(--gold);margin:0 0 12px}
 h3{font:600 14px Inter;margin:14px 0 8px;color:#d7ecdd}
 .panel h2+h3{margin-top:0}
@@ -184,9 +211,14 @@ dialog li{margin:3px 0}
 .dlgf{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 
 /* ---------- Responsive et mouvement réduit ---------- */
-@media(max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr)}.side{position:static;max-height:none}.tpw{overflow:visible}}
 @media(max-width:600px){
   :root{--cw:58px}
+  .dtop{padding-right:0;flex-direction:column;align-items:center}
+  .dealer{width:70px}
+  .bubble{max-width:90%}
+  .bubble::before{display:none}
+  .tab{font-size:12px}
   .felt{min-height:430px;padding:14px 8px}
   .felt.n2{--cw:52px;--ch:72.8px}.felt.n3,.felt.n4{--cw:44px;--ch:61.6px}.felt.n3 .fb,.felt.n4 .fb{max-width:130px}
   .act{min-width:74px;height:48px;font-size:15px}
@@ -194,9 +226,8 @@ dialog li{margin:3px 0}
   .chip{width:48px;height:48px;font-size:14px}
   .rail{padding:8px;border-radius:22px}
   .dock{position:sticky;bottom:0;z-index:5;margin:6px -8px -8px;padding:10px 8px;border-radius:0 0 22px 22px;background:linear-gradient(#4a2810f2,#2a1508f7)}
-  .modetag{max-width:46%}
 }
-@media(prefers-reduced-motion:reduce){.card.deal,.act.hinted{animation:none}.in{transition:none}}
+@media(prefers-reduced-motion:reduce){.card.deal,.act.hinted,.dealer.dealing svg,.dealer .eyes circle{animation:none}.in{transition:none}}
 </style>
 </head>
 <body>
@@ -204,6 +235,7 @@ dialog li{margin:3px 0}
   <h1>Blackjack · entraînement</h1>
   <div class="topr">
     <div class="bank" id="bankPlayers"></div>
+    <button class="ghost" id="bMusic" aria-pressed="true">♪ Musique</button>
     <button class="ghost" id="bHelp" aria-haspopup="dialog">Aide et règles <kbd>?</kbd></button>
   </div>
 </header>
@@ -211,11 +243,34 @@ dialog li{margin:3px 0}
 <main class="wrap">
   <section class="rail" aria-label="Table de jeu">
     <div class="felt" id="felt">
-      <div class="modetag" id="modeTag" hidden></div>
       <div class="shoe" title="Cartes restantes dans le sabot"><div class="box"><i id="shoeBar"></i></div><span id="shoeCount">312 cartes</span></div>
-      <div class="zone">
-        <div class="lbl">Croupier <span class="pill" id="dealerTotal"></span></div>
-        <div class="cards" id="dealerCards" role="group" aria-label="Cartes du croupier"></div>
+      <div class="dtop">
+        <div class="dealer" id="dealer" data-mood="idle" title="Le croupier">
+          <svg viewBox="0 0 120 136" aria-hidden="true">
+            <path d="M6 136C6 104 30 92 60 92s54 12 54 44z" fill="#f4f1ea"/>
+            <path d="M6 136C6 108 24 96 42 93l18 40 18-40c18 3 36 15 36 43z" fill="#1c1f24"/>
+            <path d="M44 92l16 24 16-24z" fill="#f4f1ea"/>
+            <rect x="52" y="76" width="16" height="18" rx="6" fill="#dfa47f"/>
+            <ellipse cx="33" cy="58" rx="4.5" ry="7" fill="#e6ae89"/><ellipse cx="87" cy="58" rx="4.5" ry="7" fill="#e6ae89"/>
+            <ellipse cx="60" cy="56" rx="27" ry="30" fill="#f0bd98"/>
+            <path d="M33 52C30 30 46 22 60 22s30 8 27 30c-6-10-14-15-27-15S39 42 33 52z" fill="#2b2118"/>
+            <path d="M27 44C38 24 82 24 93 44v3C82 37 38 37 27 47z" fill="#1f7a46"/>
+            <g class="brow"><path d="M43 50q7-4 14 0M63 50q7-4 14 0" stroke="#2b2118" stroke-width="2.4" fill="none" stroke-linecap="round"/></g>
+            <g class="eyes"><circle class="e1" cx="50" cy="58" r="3.3" fill="#1b1b1b"/><circle class="e2" cx="70" cy="58" r="3.3" fill="#1b1b1b"/></g>
+            <path d="M60 60q-3 7 1 9" stroke="#d99a74" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M46 71q7-5 14-2 7-3 14 2-7 4-14 1-7 3-14-1z" fill="#2b2118"/>
+            <path class="m m-idle" d="M53 77q7 3 14 0" stroke="#7a3b2a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <path class="m m-smile" d="M51 76q9 9 18 0z" fill="#8f2f2f"/>
+            <ellipse class="m m-wow" cx="60" cy="78" rx="4.5" ry="5.5" fill="#8f2f2f"/>
+            <path class="m m-sad" d="M53 81q7-5 14 0" stroke="#7a3b2a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+            <path d="M48 100l12 5-12 6zM72 100l-12 5 12 6z" fill="#c62828"/><circle cx="60" cy="105" r="3.8" fill="#a01e1e"/>
+          </svg>
+        </div>
+        <div class="dtable">
+          <div class="bubble" id="bubble" aria-hidden="true"></div>
+          <div class="lbl">Croupier <span class="pill" id="dealerTotal"></span></div>
+          <div class="cards" id="dealerCards" role="group" aria-label="Cartes du croupier"></div>
+        </div>
       </div>
       <div class="middle">
         <svg class="imprint" viewBox="0 0 600 150" aria-hidden="true">
@@ -223,6 +278,7 @@ dialog li{margin:3px 0}
           <text><textPath id="impTop" href="#arc" startOffset="50%" text-anchor="middle">LE BLACKJACK PAIE 3 CONTRE 2</textPath></text>
           <text class="sub" id="impSub" x="300" y="128" text-anchor="middle">Le croupier reste sur tous les 17</text>
         </svg>
+        <div class="modetag" id="modeTag" hidden></div>
         <div id="msg" aria-live="polite"></div>
         <div id="tip" aria-live="polite"></div>
       </div>
@@ -253,61 +309,65 @@ dialog li{margin:3px 0}
     </div>
   </section>
 
-  <aside class="side">
-    <section class="panel" aria-labelledby="setT">
-      <h2 id="setT">Réglages</h2>
-      <h3>Joueurs à la table</h3>
-      <div class="row start" id="nPick" role="radiogroup" aria-label="Nombre de joueurs"></div>
-      <div class="row start" id="names" style="margin-top:8px"></div>
-      <h3>Mode d'entraînement</h3>
-      <div class="row start" id="modes" role="radiogroup" aria-label="Mode d'entraînement"></div>
-      <p class="muted" id="modeNote"></p>
-      <h3>Options</h3>
-      <label class="opt"><input type="checkbox" id="hintToggle"><span>Afficher un indice avant de jouer</span></label>
-      <label class="opt"><input type="checkbox" id="sndToggle"><span>Sons</span></label>
-      <label class="sel"><span>Vitesse de jeu</span><select id="speed"><option value="1">Normale</option><option value="0.5">Rapide</option><option value="0.2">Éclair</option></select></label>
-      <details id="rulesBox">
-        <summary>Règles de la table</summary>
-        <fieldset id="rulesSet">
-          <label class="sel"><span>Nombre de jeux</span><select id="rDecks"><option value="4">4 jeux</option><option value="6">6 jeux</option><option value="8">8 jeux</option></select></label>
-          <label class="sel"><span>Croupier sur 17 soft</span><select id="rH17"><option value="0">Reste (S17)</option><option value="1">Tire (H17)</option></select></label>
-          <label class="sel"><span>Blackjack payé</span><select id="rBJ"><option value="1.5">3 contre 2</option><option value="1.2">6 contre 5</option></select></label>
-          <label class="opt"><input type="checkbox" id="rDAS"><span>Double après séparation</span></label>
-          <label class="opt"><input type="checkbox" id="rSurr"><span>Abandon (reddition tardive)</span></label>
-          <label class="opt"><input type="checkbox" id="rIns"><span>Assurance proposée</span></label>
-        </fieldset>
-        <p class="muted">Modifiables entre deux mains. La stratégie attendue et la table de référence s'adaptent.</p>
-      </details>
-    </section>
-    <section class="panel" aria-labelledby="statT">
-      <h2 id="statT">Statistiques</h2>
-      <div class="row start stabs" id="statTabs" role="radiogroup" aria-label="Joueur affiché"></div>
-      <div class="kpis">
-        <div class="kpi"><b id="sesPct">–</b><span id="sesN">Session · 0 décision</span></div>
-        <div class="kpi"><b id="allPct">–</b><span id="allN">Global · 0 décision</span></div>
-        <div class="kpi"><b id="streak">0</b><span>Série en cours</span></div>
-        <div class="kpi"><b id="best">0</b><span>Meilleure série</span></div>
+  <aside class="side panel">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Panneau latéral">
+      <button class="tab" role="tab" id="tb-stats" data-t="stats" aria-selected="true" aria-controls="tp-stats">Stats</button>
+      <button class="tab" role="tab" id="tb-hist" data-t="hist" aria-selected="false" aria-controls="tp-hist" tabindex="-1">Historique</button>
+      <button class="tab" role="tab" id="tb-set" data-t="set" aria-selected="false" aria-controls="tp-set" tabindex="-1">Réglages</button>
+      <button class="tab" role="tab" id="tb-chart" data-t="chart" aria-selected="false" aria-controls="tp-chart" tabindex="-1">Stratégie</button>
+    </div>
+    <div class="tpw">
+      <div class="tp" id="tp-stats" data-t="stats" role="tabpanel" aria-labelledby="tb-stats">
+        <div class="row start stabs" id="statTabs" role="radiogroup" aria-label="Joueur affiché"></div>
+        <div class="kpis">
+          <div class="kpi"><b id="sesPct">–</b><span id="sesN">Session · 0 décision</span></div>
+          <div class="kpi"><b id="allPct">–</b><span id="allN">Global · 0 décision</span></div>
+          <div class="kpi"><b id="streak">0</b><span>Série en cours</span></div>
+          <div class="kpi"><b id="best">0</b><span>Meilleure série</span></div>
+        </div>
+        <h3>Précision par type de décision</h3>
+        <div id="cats"></div>
+        <h3>Erreurs les plus fréquentes</h3>
+        <ul class="errs" id="errs"></ul>
+        <button class="ghost" id="reset">Remettre les stats à zéro</button>
       </div>
-      <h3>Précision par type de décision</h3>
-      <div id="cats"></div>
-      <h3>Erreurs les plus fréquentes</h3>
-      <ul class="errs" id="errs"></ul>
-      <button class="ghost" id="reset">Remettre les stats à zéro</button>
-    </section>
-    <section class="panel" aria-labelledby="histT">
-      <h2 id="histT">Historique</h2>
-      <div class="scroll"><table>
-        <thead><tr><th>Main</th><th>Crp.</th><th>Choix</th><th>Optimal</th><th><span hidden>Résultat</span></th></tr></thead>
-        <tbody id="hist"></tbody>
-      </table></div>
-    </section>
-    <section class="panel">
-      <details>
-        <summary>Table de stratégie de base</summary>
+      <div class="tp" id="tp-hist" data-t="hist" role="tabpanel" aria-labelledby="tb-hist" hidden>
+        <div class="scroll"><table>
+          <thead><tr><th>Main</th><th>Crp.</th><th>Choix</th><th>Optimal</th><th><span hidden>Résultat</span></th></tr></thead>
+          <tbody id="hist"></tbody>
+        </table></div>
+      </div>
+      <div class="tp" id="tp-set" data-t="set" role="tabpanel" aria-labelledby="tb-set" hidden>
+        <h3>Joueurs à la table</h3>
+        <div class="row start" id="nPick" role="radiogroup" aria-label="Nombre de joueurs"></div>
+        <div class="row start" id="names" style="margin-top:8px"></div>
+        <h3>Mode d'entraînement</h3>
+        <div class="row start" id="modes" role="radiogroup" aria-label="Mode d'entraînement"></div>
+        <p class="muted" id="modeNote"></p>
+        <h3>Options</h3>
+        <label class="opt"><input type="checkbox" id="hintToggle"><span>Afficher un indice avant de jouer</span></label>
+        <label class="opt"><input type="checkbox" id="sndToggle"><span>Bruitages</span></label>
+        <label class="opt"><input type="checkbox" id="musToggle"><span>Musique d'ambiance</span></label>
+        <label class="sel"><span>Volume de la musique</span><input type="range" id="musVol" min="0" max="100" step="5" aria-label="Volume de la musique"></label>
+        <label class="sel"><span>Vitesse de jeu</span><select id="speed"><option value="1">Normale</option><option value="0.5">Rapide</option><option value="0.2">Éclair</option></select></label>
+        <details id="rulesBox">
+          <summary>Règles de la table</summary>
+          <fieldset id="rulesSet">
+            <label class="sel"><span>Nombre de jeux</span><select id="rDecks"><option value="4">4 jeux</option><option value="6">6 jeux</option><option value="8">8 jeux</option></select></label>
+            <label class="sel"><span>Croupier sur 17 soft</span><select id="rH17"><option value="0">Reste (S17)</option><option value="1">Tire (H17)</option></select></label>
+            <label class="sel"><span>Blackjack payé</span><select id="rBJ"><option value="1.5">3 contre 2</option><option value="1.2">6 contre 5</option></select></label>
+            <label class="opt"><input type="checkbox" id="rDAS"><span>Double après séparation</span></label>
+            <label class="opt"><input type="checkbox" id="rSurr"><span>Abandon (reddition tardive)</span></label>
+            <label class="opt"><input type="checkbox" id="rIns"><span>Assurance proposée</span></label>
+          </fieldset>
+          <p class="muted">Modifiables entre deux mains. La stratégie attendue et la table de référence s'adaptent.</p>
+        </details>
+      </div>
+      <div class="tp" id="tp-chart" data-t="chart" role="tabpanel" aria-labelledby="tb-chart" hidden>
         <p class="legend" id="legend"></p>
         <div class="chart scroll" id="chart"></div>
-      </details>
-    </section>
+      </div>
+    </div>
   </aside>
 </main>
 
@@ -319,6 +379,7 @@ dialog li{margin:3px 0}
     <li>Après chaque décision, un badge vert ✓ ou rouge ✗ indique si c'était le choix optimal, avec une explication. La partie continue toujours avec votre choix.</li>
     <li>Les modes d'entraînement (paires, soft, doubles, durs 12-16, vos points faibles) font sortir plus souvent les mains difficiles.</li>
     <li>Jusqu'à 4 joueurs à la même table, chacun avec son solde et ses statistiques.</li>
+    <li>Le croupier réagit à vos mains ; la musique d'ambiance et les bruitages se règlent dans Réglages (bouton ♪ en haut pour couper la musique).</li>
     <li>Les règles se changent dans Réglages → Règles de la table : la stratégie attendue s'adapte.</li>
   </ul>
   <h3>Règles par défaut</h3>
@@ -465,7 +526,7 @@ const store = {
 const SND = {
   ctx: null,
   init(){
-    if (!S.opts.sound) return;
+    if (!S.opts.sound && !S.opts.music) return;
     try {
       const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
       this.ctx = this.ctx || new AC();
@@ -496,7 +557,70 @@ const SND = {
   good(){ this.tone(880, .12, 'sine', .035); },
   bad(){ this.tone(196, .18, 'square', .022); },
   win(){ [523, 659, 784].forEach((f, i) => this.tone(f, .22, 'sine', .05, i * .09)); },
-  lose(){ this.tone(220, .3, 'sine', .045); this.tone(165, .35, 'sine', .035, .12); }
+  lose(){ this.tone(220, .3, 'sine', .045); this.tone(165, .35, 'sine', .035, .12); },
+  /* Fanfare de blackjack : arpège montant, accord final et pluie de petites notes aiguës */
+  blackjack(){
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => { this.tone(f, .32, 'triangle', .06, i * .085); this.tone(f * 2, .22, 'sine', .022, i * .085 + .02); });
+    [523.25, 659.25, 783.99, 1046.5].forEach(f => this.tone(f, 1, 'triangle', .035, .4));
+    [2093, 2637, 3136, 2637, 3136, 4186].forEach((f, i) => this.tone(f, .25, 'sine', .018, .45 + i * .07));
+  }
+};
+
+/* Musique d'ambiance : boucle de jazz lounge générée en direct (basse, piano électrique, ride, vibraphone).
+   Grille en triolets pour le swing ; 8 mesures : Dm7 G7 Cmaj7 A7 | Dm7 G7 Cmaj7 G7. */
+const MUS = {
+  run:false, timer:null, gain:null, slot:0, t0:0, noise:null, BEAT:60 / 92,
+  PROG:[{r:38,t:[53,57,60,64]}, {r:43,t:[53,59,62,64]}, {r:36,t:[52,55,59,62]}, {r:45,t:[52,55,61,64]},
+        {r:38,t:[53,57,60,64]}, {r:43,t:[53,59,62,64]}, {r:36,t:[52,55,59,62]}, {r:43,t:[53,59,62,65]}],
+  hz: m => 440 * 2 ** ((m - 69) / 12),
+  sync(){
+    if (!SND.ctx) return;
+    if (S.opts.music && !this.run) this.start(); else if (!S.opts.music && this.run) this.stop();
+    this.level();
+  },
+  level(){ if (this.gain && SND.ctx) this.gain.gain.setTargetAtTime(S.opts.music ? S.opts.musicVol * .35 : 0, SND.ctx.currentTime, .08); },
+  start(){
+    const c = SND.ctx; if (!c) return;
+    if (!this.gain){ this.gain = c.createGain(); this.gain.gain.value = 0; this.gain.connect(c.destination); }
+    this.run = true; this.slot = 0; this.t0 = c.currentTime + .1;
+    this.timer = setInterval(() => this.tick(), 120); this.level(); this.tick();
+  },
+  stop(){ this.run = false; clearInterval(this.timer); this.level(); },
+  tick(){
+    const c = SND.ctx; if (!c || !this.run) return;
+    try { while (this.t0 + this.slot / 3 * this.BEAT < c.currentTime + .6){ this.play(this.slot, this.t0 + this.slot / 3 * this.BEAT); this.slot++; } } catch(e){}
+  },
+  env(f, t, dur, type, vol){
+    const c = SND.ctx, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(this.gain); o.start(t); o.stop(t + dur + .05);
+  },
+  hit(t, hp, vol, dur){
+    const c = SND.ctx;
+    if (!this.noise){ const b = c.createBuffer(1, c.sampleRate, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; this.noise = b; }
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = this.noise; f.type = 'highpass'; f.frequency.value = hp;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f).connect(g).connect(this.gain); s.start(t); s.stop(t + dur + .02);
+  },
+  play(slot, t){
+    const B = this.BEAT, bar = Math.floor(slot / 12) % 8, sib = slot % 12, beat = Math.floor(sib / 3), sub = sib % 3;
+    const ch = this.PROG[bar], nx = this.PROG[(bar + 1) % 8];
+    if (sub === 0){                                                   // basse qui marche
+      const m = [ch.r, ch.r + 7, ch.r + 12, nx.r + (Math.random() < .5 ? 1 : -1)][beat];
+      this.env(this.hz(m), t, B * .9, 'sine', .22); this.env(this.hz(m), t, B * .6, 'triangle', .08);
+    }
+    if (sub === 0 || (sub === 2 && (beat === 1 || beat === 3))) this.hit(t, 7000, .05, .09);   // ride
+    if (sub === 0 && (beat === 1 || beat === 3)) this.hit(t, 2500, .05, .05);                  // charley au pied
+    if (sub === 0 && beat === 0) this.env(70, t, .12, 'sine', .12);                            // grosse caisse discrète
+    if ((beat === 0 && sub === 0 && Math.random() < .85) || (beat === 1 && sub === 2 && Math.random() < .75) || (beat === 3 && sub === 2 && Math.random() < .35))
+      ch.t.forEach((m, i) => { this.env(this.hz(m), t + i * .012, B * .7, 'sine', .05); this.env(this.hz(m) * 2, t + i * .012, B * .4, 'triangle', .012); });
+    if (sub !== 1 && Math.random() < .2){                             // vibraphone épars
+      const m = ch.t[Math.floor(Math.random() * ch.t.length)] + 12 + (Math.random() < .3 ? 2 : 0);
+      this.env(this.hz(m), t, B * 1.3, 'sine', .05); this.env(this.hz(m) * 4, t, B * .25, 'sine', .01);
+    }
+  }
 };
 
 /* =====================================================================
@@ -509,7 +633,7 @@ const newPlayer = i => ({name:'Joueur ' + (i + 1), balance:START, bet:25, hands:
 
 const S = {shoe:[], cut:0, phase:'bet', busy:false, mode:'all', dealer:[],
            players:[newPlayer(0)], seat:0, active:0, betSeat:0, viewSeat:0,
-           rules:{...DEFAULT_RULES}, opts:{hint:false, sound:true, speed:1}, insResolve:null, firstRun:false};
+           rules:{...DEFAULT_RULES}, opts:{hint:false, sound:true, speed:1, music:true, musicVol:.5}, insResolve:null, firstRun:false};
 const P = () => S.players[S.seat];                 // joueur dont c'est le tour
 const V = () => S.players[S.viewSeat];             // joueur dont on affiche les stats
 const multi = () => S.players.length > 1;
@@ -669,6 +793,26 @@ function renderDealerTotal(){
 }
 const say = t => { $('msg').textContent = t; };
 function tip(t, ok){ const e = $('tip'); e.textContent = t; e.className = t ? (ok ? 'ok' : 'ko') : ''; }
+
+/* Le croupier : une phrase dans la bulle et une expression (idle, smile, wink, wow, sad) qui reviennent au calme après 4,5 s */
+const LINES = {
+  start:['Faites vos jeux !','Bienvenue à la table !'],
+  deal:['Rien ne va plus !','Les cartes arrivent…'],
+  ins:['Une assurance ?','Vous assurez ?'],
+  bj:['Blackjack ! Bravo !','Quelle main !'],
+  dbj:['Blackjack pour la maison.'],
+  dbust:['Je saute… bien joué !','Trop gourmand, je dépasse !'],
+  win:['Belle main !','Bien joué !'],
+  lose:['La maison gagne cette fois.','La chance va tourner.'],
+  push:['Égalité, on remet ça.']
+};
+let bubbleT = null;
+function dealerSay(key, mood = 'idle'){
+  const el = $('dealer'), b = $('bubble');
+  el.dataset.mood = mood; b.textContent = rnd(LINES[key]);
+  clearTimeout(bubbleT);
+  bubbleT = setTimeout(() => { b.textContent = ''; el.dataset.mood = 'idle'; }, 4500);
+}
 function renderImprint(){
   const r = S.rules;
   $('impTop').textContent = 'LE BLACKJACK PAIE ' + (r.bjPay === 1.5 ? '3 CONTRE 2' : '6 CONTRE 5');
@@ -739,6 +883,7 @@ async function deal(){
   const sitting = S.players.filter(p => p.bet > 0 && p.bet <= p.balance);
   if (!sitting.length) return;
   S.busy = true;
+  dealerSay('deal'); $('dealer').classList.add('dealing');
   if (S.shoe.length < S.cut){ newShoe(); say(`Nouveau sabot : ${S.rules.decks} jeux mélangés`); await sleep(D(700)); }
   for (const p of S.players){ p.hands = []; p.ins = 0; }
   for (const p of sitting){ p.balance -= p.bet; p.hands = [mkHand(p.bet)]; }
@@ -750,7 +895,9 @@ async function deal(){
   await drawDealer(false);
   for (const p of sitting) await drawTo(p.hands[0]);
   await drawDealer(true);
+  $('dealer').classList.remove('dealing');
   for (const p of sitting){ const h = p.hands[0]; if (isBJ(h.cards)){ h.nat = true; h.done = true; } }
+  if (sitting.some(p => p.hands[0].nat)) dealerSay('bj', 'wow');
   if (S.rules.insurance && S.dealer[0].rank === 'A') await insurancePhase(sitting);
   if (cardValue(S.dealer[0]) >= 10){                 // peek sur As ou bûche
     say('Le croupier vérifie sa carte cachée…'); await sleep(D(650));
@@ -764,6 +911,7 @@ async function deal(){
 
 /* Assurance : chaque joueur assis répond tour à tour. Le bon choix est toujours de refuser. */
 async function insurancePhase(sitting){
+  dealerSay('ins');
   for (const p of sitting){
     const h = p.hands[0], cost = h.bet / 2;
     if (p.balance < cost) continue;
@@ -876,7 +1024,14 @@ function settle(){
   say((dBJ ? 'Blackjack du croupier. ' : d > 21 ? 'Le croupier saute. ' : '') + (multi()
     ? res.map(x => `${nm(x.p)} ${sgn(x.net)}`).join(' · ')
     : net > 0 ? `Vous gagnez +${fmt(net)}` : net < 0 ? `Vous perdez −${fmt(-net)}` : 'Égalité : mise rendue'));
-  if (sum > 0) SND.win(); else if (sum < 0) SND.lose();
+  const bjWin = S.players.some(p => p.hands.some(h => h.result === 'bj'));
+  if (bjWin) SND.blackjack(); else if (sum > 0) SND.win(); else if (sum < 0) SND.lose();
+  if (dBJ) dealerSay('dbj', 'smile');
+  else if (d > 21) dealerSay('dbust', 'sad');
+  else if (bjWin) dealerSay('bj', 'wow');
+  else if (sum > 0) dealerSay('win', 'smile');
+  else if (sum < 0) dealerSay('lose', 'wink');
+  else dealerSay('push');
   S.phase = 'bet'; S.busy = false;
   save();
   renderDealerTotal(); renderTable(); updateUI();
@@ -987,7 +1142,16 @@ function syncControls(){
   $('rDecks').value = String(r.decks); $('rH17').value = r.h17 ? '1' : '0'; $('rBJ').value = String(r.bjPay);
   $('rDAS').checked = r.das; $('rSurr').checked = r.surrender; $('rIns').checked = r.insurance;
   $('hintToggle').checked = S.opts.hint; $('sndToggle').checked = S.opts.sound; $('speed').value = String(S.opts.speed);
+  $('musToggle').checked = S.opts.music; $('musVol').value = String(Math.round(S.opts.musicVol * 100));
+  const mb = $('bMusic'); mb.setAttribute('aria-pressed', String(S.opts.music)); mb.textContent = S.opts.music ? '♪ Musique' : '♪ Musique coupée';
   document.documentElement.style.setProperty('--spd', S.opts.speed);
+}
+function setMusic(on){ S.opts.music = on; saveOpts(); SND.init(); MUS.sync(); syncControls(); }
+function showTab(id){
+  if (!['stats', 'hist', 'set', 'chart'].includes(id)) id = 'stats';
+  document.querySelectorAll('.tab').forEach(b => { const on = b.dataset.t === id; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+  document.querySelectorAll('.tp').forEach(p => { p.hidden = p.dataset.t !== id; });
+  store.set('bj-tab', id);
 }
 function saveOpts(){ store.set('bj-opts', S.opts); document.documentElement.style.setProperty('--spd', S.opts.speed); updateUI(); }
 function renderPlayersUI(){
@@ -1035,6 +1199,20 @@ $('rulesSet').addEventListener('change', () => {
 $('hintToggle').onchange = e => { S.opts.hint = e.target.checked; saveOpts(); };
 $('sndToggle').onchange = e => { S.opts.sound = e.target.checked; saveOpts(); SND.init(); SND.chip(); };
 $('speed').onchange = e => { S.opts.speed = +e.target.value || 1; saveOpts(); };
+$('musToggle').onchange = e => setMusic(e.target.checked);
+$('bMusic').onclick = () => setMusic(!S.opts.music);
+$('musVol').oninput = e => { S.opts.musicVol = Math.min(1, Math.max(0, +e.target.value / 100)); store.set('bj-opts', S.opts); MUS.level(); };
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) showTab(b.dataset.t); });
+$('tabs').addEventListener('keydown', e => {                      // flèches gauche/droite entre les onglets
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  const tabs = [...document.querySelectorAll('.tab')], i = tabs.findIndex(b => b.getAttribute('aria-selected') === 'true');
+  const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+  if (n){ e.preventDefault(); showTab(n.dataset.t); n.focus(); }
+});
+document.addEventListener('visibilitychange', () => {             // la musique se met en pause quand l'onglet est masqué
+  const c = SND.ctx; if (!c) return;
+  try { if (document.hidden) c.suspend(); else c.resume(); } catch(e){}
+});
 $('bClear').onclick = () => { S.players[S.betSeat].bet = 0; save(); renderTable(); updateUI(); };
 $('bDeal').onclick = deal;
 $('bRebuy').onclick = () => {
@@ -1054,9 +1232,9 @@ $('reset').onclick = e => {
   clearTimeout(resetArmed); resetArmed = null;
   const v = V(); v.ST = freshStats(); v.SES = freshSession(); save(); renderStats(); updateUI();
 };
-document.addEventListener('pointerdown', () => SND.init(), {passive:true});
+document.addEventListener('pointerdown', () => { SND.init(); MUS.sync(); }, {passive:true});
 document.addEventListener('keydown', e => {
-  SND.init();
+  SND.init(); MUS.sync();
   if ($('help').open || e.target.matches('input,textarea,select') || e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
   const map = {t:'hit', r:'stand', d:'double', s:'split', a:'surrender'};
@@ -1084,11 +1262,14 @@ function start(data){
   S.rules = sanitizeRules(store.get('bj-rules', {}));
   STRAT = buildStrategy(S.rules); COMBOS = null;
   const o = store.get('bj-opts', null) || {hint: !!store.get('bj-hint', false)};
-  S.opts = {hint: !!o.hint, sound: o.sound !== false, speed: [1, .5, .2].includes(+o.speed) ? +o.speed : 1};
+  S.opts = {hint: !!o.hint, sound: o.sound !== false, speed: [1, .5, .2].includes(+o.speed) ? +o.speed : 1,
+            music: o.music !== false, musicVol: typeof o.musicVol === 'number' ? Math.min(1, Math.max(0, o.musicVol)) : .5};
   const sm = store.get('bj-mode', 'all'); S.mode = MODES.some(m => m[0] === sm) ? sm : 'all';
   syncControls(); newShoe(); renderPlayersUI(); renderStats(); renderChart(); renderImprint(); renderTable(); updateUI();
   if (!hadSave){ S.firstRun = true; say('Bienvenue ! Lisez l’aide puis cliquez sur Jouer'); openHelp(); }
   else say(multi() ? 'Placez vos mises puis distribuez' : 'Placez votre mise puis distribuez');
+  showTab(store.get('bj-tab', 'stats'));
+  dealerSay('start');
 }
 window.claude?.hot?.snapshot?.(() => ({players: serialize()}));
 const boot = d => start(d || {});

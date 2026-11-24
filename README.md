@@ -17,7 +17,10 @@ La stratégie attendue et la table de référence intégrée s'adaptent aux règ
 - Jusqu'à 4 joueurs à la table, chacun avec son prénom, sa mise, son solde, son gain de session et ses stats
 - Modes d'entraînement : paires, soft, doubler ou pas, dur 12-16, « mes points faibles »
 - Historique, précision par type de décision, erreurs fréquentes, sauvegarde dans le navigateur
-- Sons synthétisés (désactivables), trois vitesses de jeu, aide intégrée
+- Croupier dessiné qui réagit à la partie (bulle de dialogue et expressions)
+- Musique d'ambiance jazz lounge générée dans le navigateur (bouton ♪, volume réglable), bruitages et fanfare de blackjack, tous désactivables
+- Panneau à onglets (Stats, Historique, Réglages, Stratégie) : la page tient sur un écran d'ordinateur
+- Trois vitesses de jeu, aide intégrée
 - Raccourcis : T tirer, R rester, D doubler, S séparer, A abandonner, O/N assurance, Espace nouvelle main, ? aide
 
 ## Utilisation
@@ -27,4 +30,4 @@ Ouvrir `index.html` dans un navigateur, ou via GitHub Pages : https://eliasjr923
 ```
 node tests/run-tests.js
 ```
-Vérifie la stratégie selon les règles, puis simule des centaines de mains de 1 à 4 joueurs dans chaque mode : règlement de chaque main, conservation de l'argent (doubles, séparations, abandon, assurance), arrêt correct du croupier et respect des catégories d'entraînement.
+Vérifie la stratégie selon les règles, le séquenceur audio (avec un faux moteur audio), puis simule des centaines de mains de 1 à 4 joueurs dans chaque mode : règlement de chaque main, conservation de l'argent (doubles, séparations, abandon, assurance), arrêt correct du croupier et respect des catégories d'entraînement.
