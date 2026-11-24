@@ -27,7 +27,7 @@ global.window = {};
 const realTimeout = setTimeout;
 global.setTimeout = f => realTimeout(f, 0);           // pas d'attente pendant les tests
 const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'bj-')), 'engine.js');
-fs.writeFileSync(tmp, m[1] + '\nmodule.exports = {S, act, deal, setCount, applyRules, answerInsurance, recommend, handValue, isPair, isBJ, SND, MUS};');
+fs.writeFileSync(tmp, m[1] + '\nmodule.exports = {S, act, deal, setCount, applyRules, answerInsurance, recommend, handValue, isPair, isBJ, SND};');
 const E = require(tmp);
 
 let failures = 0;
@@ -64,24 +64,20 @@ function strategy(){
 
 /* ---------- 2. Audio : faux AudioContext qui compte les notes, pour détecter les erreurs silencieuses ---------- */
 function audio(){
-  const count = {osc:0, noise:0};
+  const count = {osc:0};
   const param = () => ({value:0, setValueAtTime(){}, exponentialRampToValueAtTime(){}, setTargetAtTime(){}});
   const node = () => { const n = {connect: x => x || n, start(){}, stop(){}, frequency:param(), gain:param(), type:'', buffer:null}; return n; };
   E.SND.ctx = {currentTime:0, sampleRate:8000, destination:{}, state:'running', resume(){}, suspend(){},
     createOscillator(){ count.osc++; return node(); }, createGain: node, createBiquadFilter: node,
-    createBufferSource(){ count.noise++; return node(); }, createBuffer: (c, n) => ({getChannelData: () => new Float32Array(n)})};
-  E.S.opts.sound = true; E.S.opts.music = true; E.S.opts.musicVol = .5;
-  E.SND.blackjack();
-  if (count.osc < 18) fail(`fanfare de blackjack : ${count.osc} notes seulement`);
-  E.MUS.start(); E.MUS.stop();                           // démarre puis arrête le séquenceur
-  const before = count.osc;
-  try { for (let slot = 0; slot < 96 * 2; slot++) E.MUS.play(slot, slot * .1); }
-  catch(e){ fail('musique : erreur dans le séquenceur : ' + e.message); }
-  if (count.osc - before < 200) fail(`musique : ${count.osc - before} notes sur deux boucles, trop peu`);
-  if (count.noise < 50) fail('musique : pas de percussions');
-  E.S.opts.music = false; E.MUS.run = false; E.MUS.sync();
+    createBufferSource: node, createBuffer: (c, n) => ({getChannelData: () => new Float32Array(n)})};
+  E.S.opts.sound = true;
+  for (const f of ['blackjack', 'win', 'lose', 'good', 'bad', 'chip', 'card']){
+    const b = count.osc;
+    try { E.SND[f](); } catch(e){ fail(`son ${f} : ${e.message}`); }
+    if (f !== 'card' && count.osc === b) fail(`son ${f} : aucune note jouée`);
+  }
   E.SND.ctx = null;
-  console.log(`Audio : fanfare et ${count.osc - before} notes de musique sur deux boucles, sans erreur`);
+  console.log('Audio : 7 sons vérifiés, sans erreur');
 }
 
 /* ---------- 3. Simulation ---------- */
